@@ -18,7 +18,7 @@ import cv2
 parser = argparse.ArgumentParser(
     description="Script to get test_report.json from object det api models")
 parser.add_argument('-m', default="", help="PATH_TO_FROZEN_GRAPH")
-parser.add_argument('-th', default=0.5, type=float, help="SCORE_THRESHOLD")
+parser.add_argument('-th', default=0.1, type=float, help="SCORE_THRESHOLD")
 parser.add_argument('-dr', default="", type=str, help="Data root directory")
 parser.add_argument('-j', default="", type=str, help="Dataset JSON file path")
 args = parser.parse_args()
