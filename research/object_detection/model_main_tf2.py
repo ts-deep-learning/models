@@ -31,6 +31,8 @@ from absl import flags
 import tensorflow.compat.v2 as tf
 from object_detection import model_lib_v2
 
+import wandb
+
 flags.DEFINE_string('pipeline_config_path', None, 'Path to pipeline config '
                     'file.')
 flags.DEFINE_integer('num_train_steps', None, 'Number of train steps.')
@@ -45,6 +47,10 @@ flags.DEFINE_integer('sample_1_of_n_eval_on_train_examples', 5, 'Will sample '
 flags.DEFINE_string(
     'model_dir', None, 'Path to output model directory '
                        'where event and checkpoint files will be written.')
+
+#flags.DEFINE_string(
+#    'wb_group', None, 'Name for the wandb experiment/trial')
+
 flags.DEFINE_string(
     'checkpoint_dir', None, 'Path to directory holding a checkpoint.  If '
     '`checkpoint_dir` is provided, this binary operates in eval-only mode, '
@@ -79,6 +85,7 @@ def main(unused_argv):
   tf.config.set_soft_device_placement(True)
 
   if FLAGS.checkpoint_dir:
+    wandb.init(project="cotton", name="RTN_E2E_008_eval", sync_tensorboard=True)
     model_lib_v2.eval_continuously(
         pipeline_config_path=FLAGS.pipeline_config_path,
         model_dir=FLAGS.model_dir,
@@ -89,6 +96,7 @@ def main(unused_argv):
         checkpoint_dir=FLAGS.checkpoint_dir,
         wait_interval=300, timeout=FLAGS.eval_timeout)
   else:
+    wandb.init(project="cotton", name="RTN_E2E_008_train", sync_tensorboard=True)
     if FLAGS.use_tpu:
       # TPU is automatically inferred if tpu_name is None and
       # we are running under cloud ai-platform.
