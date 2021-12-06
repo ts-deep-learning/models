@@ -1,2 +1,0 @@
-export PYTHONPATH=/home/azureuser/work/cd_expts/tf_obj_det/research/slim:/home/azureuser/work/cd_expts/tf_obj_det/research
-python ts_space/scripts/eval_tf2_model.py -m /mnt/ts-cvml-datastore/ts_model/models/cotton/CNT_trials/CNT_train/CNT_nv1_AZ_001/frozen_model/saved_model -th 0.1 -dr /mnt/ts-cvml-datastore/ts_data/cropped_data/cotton/v1 -j /mnt/ts-cvml-datastore/ts_data/datasets/cotton/dataset_jsons/v1.0.2/test_1.0.1.json

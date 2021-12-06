@@ -86,12 +86,12 @@ def main(unused_argv):
   tf.config.set_soft_device_placement(True)
   wb_group = FLAGS.wb_group
 
-  # Create RUN directory
-  model_dir = os.path.join(FLAGS.model_dir, wb_group)
-  if not os.path.exists(model_dir):
-      os.makedirs(model_dir)
-
   if FLAGS.checkpoint_dir:
+    model_dir = os.path.join(FLAGS.checkpoint_dir, wb_group)
+    if not os.path.exists(model_dir):
+        print('Checkpoint directory does not exist: ', model_dir)
+        exit()
+
     wandb.init(project="cotton", name=wb_group+'_eval', group=wb_group, job_type='eval', sync_tensorboard=True)
     model_lib_v2.eval_continuously(
         pipeline_config_path=FLAGS.pipeline_config_path,
@@ -103,6 +103,11 @@ def main(unused_argv):
         checkpoint_dir=model_dir,
         wait_interval=300, timeout=FLAGS.eval_timeout)
   else:
+    # Create RUN directory
+    model_dir = os.path.join(FLAGS.model_dir, wb_group)
+    if not os.path.exists(model_dir):
+      os.makedirs(model_dir)
+
     wandb.init(project="cotton", name=wb_group+'_train', group=wb_group, job_type='train', sync_tensorboard=True)
     if FLAGS.use_tpu:
       # TPU is automatically inferred if tpu_name is None and
