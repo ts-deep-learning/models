@@ -6,3 +6,5 @@ tf_slim
 pycocotools
 lvis
 scipy
+tf-models-official
+tensorflow.io

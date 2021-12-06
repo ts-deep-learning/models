@@ -27,9 +27,12 @@ python model_main_tf2.py -- \
   --pipeline_config_path=$PIPELINE_CONFIG_PATH \
   --alsologtostderr
 """
+import os
 from absl import flags
 import tensorflow.compat.v2 as tf
 from object_detection import model_lib_v2
+
+import wandb
 
 flags.DEFINE_string('pipeline_config_path', None, 'Path to pipeline config '
                     'file.')
@@ -69,6 +72,10 @@ flags.DEFINE_boolean('record_summaries', True,
                       ' or the training pipeline. This does not impact the'
                       ' summaries of the loss values which are always'
                       ' recorded.'))
+flags.DEFINE_string(
+    'wb_group',
+    default='CT',
+    help='Name of the experiment')
 
 FLAGS = flags.FLAGS
 
@@ -77,18 +84,31 @@ def main(unused_argv):
   flags.mark_flag_as_required('model_dir')
   flags.mark_flag_as_required('pipeline_config_path')
   tf.config.set_soft_device_placement(True)
+  wb_group = FLAGS.wb_group
 
   if FLAGS.checkpoint_dir:
+    model_dir = os.path.join(FLAGS.checkpoint_dir, wb_group)
+    if not os.path.exists(model_dir):
+        print('Checkpoint directory does not exist: ', model_dir)
+        exit()
+
+    wandb.init(project="cotton", name=wb_group+'_eval', group=wb_group, job_type='eval', sync_tensorboard=True)
     model_lib_v2.eval_continuously(
         pipeline_config_path=FLAGS.pipeline_config_path,
-        model_dir=FLAGS.model_dir,
+        model_dir=model_dir,
         train_steps=FLAGS.num_train_steps,
         sample_1_of_n_eval_examples=FLAGS.sample_1_of_n_eval_examples,
         sample_1_of_n_eval_on_train_examples=(
             FLAGS.sample_1_of_n_eval_on_train_examples),
-        checkpoint_dir=FLAGS.checkpoint_dir,
+        checkpoint_dir=model_dir,
         wait_interval=300, timeout=FLAGS.eval_timeout)
   else:
+    # Create RUN directory
+    model_dir = os.path.join(FLAGS.model_dir, wb_group)
+    if not os.path.exists(model_dir):
+      os.makedirs(model_dir)
+
+    wandb.init(project="cotton", name=wb_group+'_train', group=wb_group, job_type='train', sync_tensorboard=True)
     if FLAGS.use_tpu:
       # TPU is automatically inferred if tpu_name is None and
       # we are running under cloud ai-platform.
@@ -105,7 +125,7 @@ def main(unused_argv):
     with strategy.scope():
       model_lib_v2.train_loop(
           pipeline_config_path=FLAGS.pipeline_config_path,
-          model_dir=FLAGS.model_dir,
+          model_dir=model_dir,
           train_steps=FLAGS.num_train_steps,
           use_tpu=FLAGS.use_tpu,
           checkpoint_every_n=FLAGS.checkpoint_every_n,
